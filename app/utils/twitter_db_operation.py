@@ -1,5 +1,7 @@
 from ..config import mongo_config
-from ..utils import logger
+from ..utils.logger import logger
+from random import choice
+
 from pymongo.errors import PyMongoError
 from ..utils.error_msg_struct import fetch_error_message_struct
 
@@ -14,11 +16,11 @@ def retrieve_user_creds(service_name):
         logger.info(f"**hitting db of collection name: {TWITTER_CREDS_COLLECTION_NAME}")
         collection = db[TWITTER_CREDS_COLLECTION_NAME]
         result = collection.find({})
-            
+        cred = list(result)
 
         if result:
             logger.info("**got result from DB")
-            return result
+            return choice(cred)
         else:
             logger.error("**error in fetching results from DB")
             return fetch_error_message_struct(status_code=500)
