@@ -1,16 +1,20 @@
 import requests
 import json
 
-# from ...utils.logger import logger
+
+from ...utils.logger import logger
+
 
 
 BEARER_TOKEN = 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
 
 def create_session():
+    logger.info("**creating new session")
     session = requests.Session()
     return session
 
 def generate_headers(session):
+    logger.info("**generating headers")
     url = "https://api.twitter.com/1.1/guest/activate.json"
     bearer_token = BEARER_TOKEN
 
@@ -26,6 +30,8 @@ def generate_headers(session):
 
 
 def get_initial_flow_token(session, x_guest_token):
+
+    logger.info("**generating initial flow tokens")
 
     url = "https://api.twitter.com/1.1/onboarding/task.json?flow_name=login"
 
@@ -159,6 +165,7 @@ def get_initial_flow_token(session, x_guest_token):
     return flow_token_v1
 
 def process_login(session, flow_token_v1, username, user_password, x_guest_token):
+    logger.info(f"**processing login with creds: {username, user_password}")
 
     url = "https://api.twitter.com/1.1/onboarding/task.json"
 
@@ -258,6 +265,7 @@ def process_login(session, flow_token_v1, username, user_password, x_guest_token
     return flow_token_v3
 
 def generate_x_csrf_token(session, flow_token_v3, x_guest_token):
+    logger.info("**generating x-csrf-token")
 
     url = "https://api.twitter.com/1.1/onboarding/task.json"
 
@@ -334,6 +342,8 @@ def generate_x_csrf_token(session, flow_token_v3, x_guest_token):
     }
 
     response = session.get(url, headers=headers, data=payload)
+    # print(response.text)
+
 
     cookies = response.cookies
  
@@ -345,9 +355,10 @@ def generate_x_csrf_token(session, flow_token_v3, x_guest_token):
     return x_csrf_token
     
 
-def fetch_search_result(session, search_string, x_csrf_token):
+def fetch_search_result(session, search_string,  x_csrf_token):
+    logger.info(f"**generating search result for the given string: {search_string}")
 
-    url = "https://twitter.com/i/api/graphql/ummoVKaeoT01eUyXutiSVQ/SearchTimeline?variables=%7B%22rawQuery%22%3A%22modi%22%2C%22count%22%3A2%2C%22querySource%22%3A%22typed_query%22%2C%22product%22%3A%22Top%22%7D&features=%7B%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Atrue%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22rweb_video_timestamps_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D"
+    url = f"https://twitter.com/i/api/graphql/ummoVKaeoT01eUyXutiSVQ/SearchTimeline?variables=%7B%22rawQuery%22%3A%22{search_string}%22%2C%22count%22%3A2%2C%22querySource%22%3A%22typed_query%22%2C%22product%22%3A%22Top%22%7D&features=%7B%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Atrue%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22rweb_video_timestamps_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D"
 
     payload = {}
     headers = {
@@ -367,14 +378,15 @@ def fetch_search_result(session, search_string, x_csrf_token):
     'Sec-Fetch-Mode': 'cors',
     'Sec-Fetch-Dest': 'empty',
     'Referer': 'https://twitter.com/search?q=modi&src=typed_query',
-    'Accept-Encoding': 'gzip, deflate, br',
+    # 'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
     'Priority': 'u=1, i',
     }
 
     response = session.get(url, headers=headers, data=payload)
-    print(response.text)
-    
+
+    return json.loads(response.text)
+ 
 
 
 
@@ -384,23 +396,28 @@ def fetch_search_result(session, search_string, x_csrf_token):
 
 
 
-def driver_function(username, password):
-    # logger.info(f"Hitting the driver function")
-    # username = str(data.username).strip()
-    # password = str(data.password).strip()
+def driver_function(data):
+    logger.info(f"Hitting the driver function")
+    username = str(data.username).strip()
+    password = str(data.password).strip()
     session = create_session()
     
     x_guest_token = generate_headers(session=session)
+    # print(x_guest_token)
 
     flow_token_v1 = get_initial_flow_token(session=session,x_guest_token=x_guest_token)
+    # print(flow_token_v1)
 
     flow_token_v3 = process_login(session=session,flow_token_v1=flow_token_v1,username=username, user_password=password,x_guest_token=x_guest_token)
 
+    # print(flow_token_v3)
     x_csrf_token = generate_x_csrf_token(session=session,flow_token_v3=flow_token_v3,x_guest_token=x_guest_token)
+    # print(x_csrf_token)
 
-    return fetch_search_result(session=session,search_string="",x_csrf_token=x_csrf_token)
+    return fetch_search_result(session=session,search_string="modi",x_csrf_token=x_csrf_token)
 
 
 
 
-driver_function("prithidevghosh","Ghosh@39039820")
+
+# driver_function("prithidevghosh","Ghosh@39039820")

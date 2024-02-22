@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from ...services.twitter import service_twitter
+from ...utils import twitter_db_operation
 
 class Twitter(BaseModel):
     username: str
@@ -17,8 +18,14 @@ router = APIRouter(
 
 
 @router.post("/fetchPosts")
-def fetchTwitterPosts(data: Twitter):
+def fetch_twitter_posts(data: Twitter):
     result = service_twitter.driver_function(data)
     return result
+
+@router.post("/loadCreds")
+def load_data_to_db(data: Twitter):
+    result = twitter_db_operation.load_data_to_db(service_name="twitter",data=data)
+    return result
+
 
 
