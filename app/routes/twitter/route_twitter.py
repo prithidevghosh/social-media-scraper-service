@@ -11,7 +11,7 @@ class TwitterCreds(BaseModel):
 
 class TwitterQuery(BaseModel):
     query_string: str
-    query_length: str
+    query_length: int
 
 
 router = APIRouter(
