@@ -387,14 +387,92 @@ def fetch_search_result(session, search_string, output_count,  x_csrf_token):
 
     response = session.get(url, headers=headers, data=payload)
 
-    return json.loads(response.text)
+    json_response = json.loads(response.text)
+
+    tweet_collection =  json_response["data"]["search_by_raw_query"]["search_timeline"]["timeline"]["instructions"][0]["entries"]
  
+    return tweet_collection
+    # return clean_search_result(tweet_collection=tweet_collection)
+
+
+def process_personal_info(user_info):
+
+    legacy_user_info = user_info["legacy"]
+
+    sourceUserInfo = {
+        "sourceAccountName": legacy_user_info.get("name","N.A"),
+        "sourceAccountUsername": legacy_user_info.get("screen_name","N.A"),
+        "sourceFollowerCount": legacy_user_info.get("followers_count","N.A"),
+        "sourceFollowingCount": legacy_user_info.get("friends_count", "N.A")
+    }
+
+    return sourceUserInfo
+
+def process_tweet_info(tweet_info):
+    sourceLikeCount = tweet_info["favorite_count"]
+    sourceTextContent = tweet_info["full_text"]
+    sourceCommentCount = tweet_info["reply_count"]
+    sourceRetweetCount = tweet_info["retweet_count"]
 
 
 
 
+    sourceHashtags = []
+
+    hastags = tweet_info["entities"]["hashtags"]
+    if len(hastags) > 0:
+        for hashtag in hastags:
+            text_content = hashtag["text"]
+            sourceHashtags.append(f"#{text_content}")
 
 
+    media_contents = tweet_info.get("entities").get("media")
+    # media_content_types =  media_content["type"]
+    
+    sourceMediaContent = []
+    
+    if media_contents:
+        for media_content in media_contents:
+            media_content_type = media_content["type"]
+            if media_content_type == "photo":
+                sourceMediaContent.append(media_content["media_url_https"])
+            elif media_content_type == "video":
+                video_info_variants = media_content["video_info"]["variants"]
+                for video_info in video_info_variants:
+                    if video_info["content_type"] == "video/mp4":
+                        sourceMediaContent.append(video_info["url"])
+
+    sourceOrganicTweetDetail = {
+        "sourceLikeCount": sourceLikeCount,
+        "sourceTextContent": sourceTextContent,
+        "sourceCommentCount": sourceCommentCount,
+        "sourceRetweetCount": sourceRetweetCount,
+        "sourceMediaContent": sourceMediaContent
+    }
+
+    return sourceOrganicTweetDetail
+            
+    
+
+def clean_search_result(tweet_collection):
+    searchResults = []
+    for tweet in tweet_collection:
+        singleSearchResult={}
+        entry_id = tweet["entryId"]
+        if str(entry_id).startswith("tweet"):
+            core_result = tweet["content"]["itemContent"]["tweet_results"]["result"]
+            user_info = core_result["core"]["user_results"]["result"]
+            tweet_info = core_result["legacy"]
+            sourceUserInfo = process_personal_info(user_info=user_info)
+            sourceUserInfo["isSourceXVerified"] = user_info.get("is_blue_verified","N.A")
+            sourceOrganicTweetDetail = process_tweet_info(tweet_info=tweet_info)
+            sourceOrganicTweetDetail["sourceEngagementCount"] = core_result["views"]["count"]
+            singleSearchResult["sourceUserInfo"] = sourceUserInfo
+            singleSearchResult["sourceOrganicTweetDetail"] = sourceOrganicTweetDetail
+            searchResults.append(singleSearchResult)
+            
+
+    return searchResults
 
 
 
