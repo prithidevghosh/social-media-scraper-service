@@ -25,6 +25,7 @@ def process_search_results(session, search_string, iterations_count, last_iterat
     final_output_data = []
     run_without_cursor_param = True
     display_count = 0
+    final_result_count = 0
 
     while iterations_count > 0:
         logger.info(f"Searching for {display_count}th iteration")
@@ -38,11 +39,13 @@ def process_search_results(session, search_string, iterations_count, last_iterat
             else:
                 url = f"https://twitter.com/i/api/graphql/ummoVKaeoT01eUyXutiSVQ/SearchTimeline?variables=%7B%22rawQuery%22%3A%22{search_string}%22%2C%22count%22%3A20%2C%22cursor%22%3A%22{cursor_value}%22%2C%22querySource%22%3A%22recent_search_click%22%2C%22product%22%3A%22Top%22%7D&features=%7B%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Atrue%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22rweb_video_timestamps_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D"
                 
-            search_result, cursor_value= fetch_search_result(session, url, search_string, x_csrf_token, display_count)
-            final_output_data.append(search_result)
+            search_result, cursor_value, result_count= fetch_search_result(session, url, search_string, x_csrf_token, display_count)
+            final_result_count+= result_count
+            final_output_data.append(search_result) if len(search_result) > 0 else None
             display_count += 1
         except Exception as e:
             logger.error(f"Error fetching search result: {e}")
+            return final_output_data, final_result_count
 
     if last_iteration_output_count > 0:
         try:
@@ -53,12 +56,15 @@ def process_search_results(session, search_string, iterations_count, last_iterat
             else:
                 url = f"https://twitter.com/i/api/graphql/ummoVKaeoT01eUyXutiSVQ/SearchTimeline?variables=%7B%22rawQuery%22%3A%22{search_string}%22%2C%22count%22%3A{last_iteration_output_count}%2C%22querySource%22%3A%22typed_query%22%2C%22product%22%3A%22Top%22%7D&features=%7B%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Atrue%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22rweb_video_timestamps_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D"
             
-            search_result, cursor_value = fetch_search_result(session, url, search_string, x_csrf_token, display_count)
-            final_output_data.append(search_result)
+            search_result, cursor_value, result_count = fetch_search_result(session, url, search_string, x_csrf_token, display_count)
+            final_result_count+= result_count
+            final_output_data.append(search_result) if len(search_result) > 0 else None
         except Exception as e:
             logger.error(f"Error fetching extra iteration search result: {e}")
+            return final_output_data, final_result_count
 
-    return final_output_data
+
+    return final_output_data, final_result_count
 
     
 
@@ -101,10 +107,10 @@ def fetch_search_result(session, url, search_string, x_csrf_token, display_count
             cursor_value_tweet_collection = json_response.get("data", {}).get("search_by_raw_query", {}).get("search_timeline", {}).get("timeline", {}).get("instructions", [])[2]
 
         # Process search result and cursor value
-        search_result = clean_search_result(tweet_collection=tweet_collection)
+        search_result, result_count = clean_search_result(tweet_collection=tweet_collection)
         cursor_value = fetch_cursor_value(tweet_collection=cursor_value_tweet_collection, display_count=display_count)
 
-        return search_result, cursor_value
+        return search_result, cursor_value, result_count
 
     except requests.RequestException as e:
         logger.error(f"Error fetching search result: {e}")
@@ -178,6 +184,7 @@ def process_tweet_info(tweet_info):
 
 def clean_search_result(tweet_collection):
     search_results = []
+    result_count = 0
 
     for tweet in tweet_collection:
         single_search_result = {}
@@ -206,11 +213,12 @@ def clean_search_result(tweet_collection):
             # Populate single search result with processed information
             single_search_result["sourceUserInfo"] = source_user_info
             single_search_result["sourceOrganicTweetDetail"] = source_organic_tweet_detail
+            result_count+= 1
 
             # Append single search result to search results list
             search_results.append(single_search_result)
 
-    return search_results
+    return search_results, result_count
 
 
 def fetch_cursor_value(tweet_collection, display_count):
@@ -253,9 +261,16 @@ def driver_function(data):
 
     # return fetch_search_result(session=session,search_string=search_string, output_count=output_count, x_csrf_token=x_csrf_token)
 
-    return process_search_results(session, search_string, base_iterations, last_iteration_output_count, x_csrf_token)
+    final_output_data, final_result_count =  process_search_results(session, search_string, base_iterations, last_iteration_output_count, x_csrf_token)
 
+    search_result_count = {
+        "resultCount": final_result_count
+    }
 
+    final_output_data.insert(0, search_result_count)
+
+    return final_output_data
+    
 
 
 # driver_function("prithidevghosh","Ghosh@39039820")
