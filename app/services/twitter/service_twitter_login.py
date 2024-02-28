@@ -10,14 +10,15 @@ from ...utils.twitter_db_operation import retrieve_user_creds
 
 
 BEARER_TOKEN = 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
+SERVICE_NAME = "TWITTER-LOGIN-PROCESSOR"
 
 def create_session():
-    logger.info("**creating new session")
+    logger.info(f"***{SERVICE_NAME}::: creating new session")
     session = requests.Session()
     return session
 
 def generate_headers(session):
-    logger.info("**generating headers")
+    logger.info(f"***{SERVICE_NAME}::: generating headers")
     url = "https://api.twitter.com/1.1/guest/activate.json"
     bearer_token = BEARER_TOKEN
 
@@ -34,7 +35,7 @@ def generate_headers(session):
 
 def get_initial_flow_token(session, x_guest_token):
 
-    logger.info("**generating initial flow tokens")
+    logger.info(f"***{SERVICE_NAME}::: generating initial flow tokens")
 
     url = "https://api.twitter.com/1.1/onboarding/task.json?flow_name=login"
 
@@ -168,7 +169,7 @@ def get_initial_flow_token(session, x_guest_token):
     return flow_token_v1
 
 def process_login(session, flow_token_v1, username, user_password, x_guest_token):
-    logger.info(f"**processing login with creds: {username, user_password}")
+    logger.info(f"***{SERVICE_NAME}::: processing login with creds: {username, user_password}")
 
     url = "https://api.twitter.com/1.1/onboarding/task.json"
 
@@ -268,7 +269,7 @@ def process_login(session, flow_token_v1, username, user_password, x_guest_token
     return flow_token_v3
 
 def generate_x_csrf_token(session, flow_token_v3, x_guest_token):
-    logger.info("**generating x-csrf-token")
+    logger.info(f"***{SERVICE_NAME}::: generating x-csrf-token")
 
     url = "https://api.twitter.com/1.1/onboarding/task.json"
 
@@ -361,7 +362,7 @@ def generate_x_csrf_token(session, flow_token_v3, x_guest_token):
 
 
 def driver_function():
-    logger.info(f"Hitting the driver function")
+    logger.info(f"***Hitting the driver function of service: {SERVICE_NAME}")
 
     login_creds = retrieve_user_creds(service_name = "twitter")
     username = login_creds["username"]
