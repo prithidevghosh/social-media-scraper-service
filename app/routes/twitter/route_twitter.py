@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
 
-from ...services.twitter import service_twitter_fetch_top_posts, service_twitter_fetch_people, service_twitter_fetch_latest_posts, service_twitter_user_following_list
+from ...services.twitter import service_twitter_fetch_top_posts, service_twitter_fetch_people, service_twitter_fetch_latest_posts, service_twitter_user_following_list, service_twitter_user_follower_list
 from ...utils import twitter_db_operation
 
 class TwitterCreds(BaseModel):
@@ -12,6 +12,9 @@ class TwitterCreds(BaseModel):
 class TwitterQuery(BaseModel):
     query_string: str
     query_length: int
+
+class UserFollowQuery(TwitterQuery):
+    verification_filter: bool
 
 
 router = APIRouter(
@@ -37,8 +40,13 @@ def fetch_latest_twitter_posts(data: TwitterQuery):
     return result
 
 @router.post("/fetchFollowingList")
-def fetch_account_follow_list(data: TwitterQuery):
+def fetch_account_following_list(data: TwitterQuery):
     result = service_twitter_user_following_list.driver_function(data)
+    return result
+
+@router.post("/fetchFollowerList")
+def fetch_account_follower_list(data: UserFollowQuery):
+    result = service_twitter_user_follower_list.driver_function(data)
     return result
 
 

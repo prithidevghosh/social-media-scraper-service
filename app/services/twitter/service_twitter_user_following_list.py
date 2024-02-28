@@ -67,7 +67,7 @@ def fetch_user_id(session, x_csrf_token, username):
     return user_id
 
 
-def process_search_results(session, user_id, iterations_count, last_iteration_output_count, x_csrf_token, output_count):
+def process_search_results(session, user_id, username, iterations_count, last_iteration_output_count, x_csrf_token, output_count):
     final_output_data = []
     run_without_cursor_param = True
     display_count = 0
@@ -85,7 +85,7 @@ def process_search_results(session, user_id, iterations_count, last_iteration_ou
             else:
                 url = f"https://twitter.com/i/api/graphql/g5P4cbXR4ta4oCeE7y2vLQ/Following?variables=%7B%22userId%22%3A%22{user_id}%22%2C%22count%22%3A20%2C%22cursor%22%3A%22{cursor_value}%22%2C%22includePromotedContent%22%3Afalse%7D&features=%7B%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Atrue%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22rweb_video_timestamps_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D"
                 
-            search_result, cursor_value, result_count= fetch_search_result(session, url, user_id, x_csrf_token, display_count)
+            search_result, cursor_value, result_count= fetch_search_result(session, url, user_id, username, x_csrf_token, display_count)
             final_result_count+= result_count
             final_output_data.append(search_result) if len(search_result) > 0 else None
             if final_result_count >= output_count:
@@ -104,7 +104,7 @@ def process_search_results(session, user_id, iterations_count, last_iteration_ou
             else:
                 url = f"https://twitter.com/i/api/graphql/g5P4cbXR4ta4oCeE7y2vLQ/Following?variables=%7B%22userId%22%3A%22{user_id}%22%2C%22count%22%3A{last_iteration_output_count}%2C%22includePromotedContent%22%3Afalse%7D&features=%7B%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Atrue%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22rweb_video_timestamps_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D"
             
-            search_result, cursor_value, result_count = fetch_search_result(session, url, user_id, x_csrf_token, display_count)
+            search_result, cursor_value, result_count = fetch_search_result(session, url, user_id, username, x_csrf_token, display_count)
             final_result_count+= result_count
             final_output_data.append(search_result) if len(search_result) > 0 else None
             if final_result_count >= output_count:
@@ -118,7 +118,7 @@ def process_search_results(session, user_id, iterations_count, last_iteration_ou
 
     
 
-def fetch_search_result(session, url, user_id, x_csrf_token, display_count):
+def fetch_search_result(session, url, user_id, username, x_csrf_token, display_count):
     logger.info(f"**generating search result for the given user id: {user_id}")
 
     payload = {}
@@ -138,7 +138,7 @@ def fetch_search_result(session, url, user_id, x_csrf_token, display_count):
         'Sec-Fetch-Site': 'same-origin',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Dest': 'empty',
-        'Referer': 'https://twitter.com/narendramodi/following',
+        'Referer': f'https://twitter.com/{username}/following',
         'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
         'Priority': 'u=1, i'
     }
@@ -256,7 +256,7 @@ def driver_function(data):
     # return fetch_search_result(session=session,search_string=search_string, output_count=output_count, x_csrf_token=x_csrf_token)
     user_id = fetch_user_id(session, x_csrf_token, search_string)
 
-    final_output_data, final_result_count =  process_search_results(session, user_id, base_iterations, last_iteration_output_count, x_csrf_token, output_count)
+    final_output_data, final_result_count =  process_search_results(session, user_id, search_string, base_iterations, last_iteration_output_count, x_csrf_token, output_count)
 
     search_result_count = {
         "resultCount": final_result_count
