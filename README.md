@@ -1,8 +1,9 @@
 # social-media-scraper-service
 
-### The Social Media Scraper Service provides functionality to scrape various social media sites like Twitter, Instagram, Facebook, etc. As of now, only the Twitter scraper is implemented. Below, you'll find a detailed guide on how to interact with the API, key features, and example requests.
+# The Social Media Scraper Service provides functionality to scrape various social media sites like Twitter, Instagram, Facebook, etc. As of now, only the Twitter scraper is implemented. Below, you'll find a detailed guide on how to interact with the API, key features, and example requests.
 
 **Warning:** This product is still in development thus to try this you need to run the app locally. It's very easy to setup not complex as other open source projects :).
+**Usage Info** Please use this [Postman collection](https://api.postman.com/collections/26116850-a011a2b0-5717-46f4-9c03-2f4b3e47ac0e?access_key=PMAT-01HW1271WHY7TTEYNAFFZSDTZB) to access the API curls.
 
 
 
